@@ -12,7 +12,7 @@ my ($tko, $tt, $tm);
 
 my $options = join(" ", @ARGV);
 
-GetOptions ("correlation=s"           => \$megapathway,   
+GetOptions (#"correlation=s"           => \$megapathway,   
             "infile=s"                => \$a,
             "output=s"                => \$output_meta,
             ) or die("pbm files $usage");
@@ -22,25 +22,25 @@ chomp($md5);
 my $audit_trail = "# ".localtime()."\n"."# user: ".$ENV{"USER"}."\n"."# directory:".$ENV{'PWD'}."\n"."# cmd: ".$0." ".$options."\n# $md5";
 
 
-if (! $megapathway) {
-    print "No correlation table\n $usage\n";
-    exit;
-}
+#if (! $megapathway) {
+#    print "No correlation table\n $usage\n";
+#    exit;
+#}
 if (! $a) { print "No abundance table\n $usage\n"; exit;}
 
 print localtime()."\t"."pivot_table - Step 1/4\n";
 ###############################################################################
 ### correlation ###
 ###############################################################################
-open (FILE1b, $megapathway) or die "pbm pathway file: $usage";
-while (<FILE1b>) {
-    chomp;
-    my @tab = split ("\t", $_);
-    my ($ko,$path) =~ /ko:(\S+)\s+(\S+)/;
-    $met{$ko}{$path} = 1;
-}
+#open (FILE1b, $megapathway) or die "pbm pathway file: $usage";
+#while (<FILE1b>) {
+#    chomp;
+#    my @tab = split ("\t", $_);
+#    my ($ko,$path) =~ /ko:(\S+)\s+(\S+)/;
+#    $met{$ko}{$path} = 1;
+#}
 
-close FILE1b;
+#close FILE1b;
 
 ###############################################################################
 #### Parse abundance table ###
@@ -61,11 +61,24 @@ while (<FILE2>) {
         }
         else{
             my $gene = $tab[0];
-            my $ko = $tab[1];
-            for my $i (3..$#tab){
-                my $s = $samples[$i-3];
-                my $v = $tab[$i];
-                $ko{$ko}{$s} += $v;
+            if ($tab[1] =~/,/){
+		my @tabko = split(",",$tab[1]);
+		for my $i (0..$#tabko){
+			my $ko = $tabko[$i];
+			for my $i (3..$#tab){
+                	    my $s = $samples[$i-3];
+                	    my $v = $tab[$i];
+                	    $ko{$ko}{$s} += $v;
+			}
+		}
+	    }
+	    else{
+	         my $ko = $tab[1];
+                for my $i (3..$#tab){
+                    my $s = $samples[$i-3];
+                    my $v = $tab[$i];
+                    $ko{$ko}{$s} += $v;
+		}
             }
         }
     }
@@ -82,7 +95,7 @@ open(W3, ">$output_meta") or die "pbm output_met: $usage";
 
 print W3 "ko\t".join ("\t", @samples)."\n";
 
-foreach my $m (keys %ko){
+foreach my $m (sort keys %ko){
     my @valuesM;
     foreach my $s (@samples){
         if ($ko{$m}{$s}) {
@@ -90,7 +103,7 @@ foreach my $m (keys %ko){
         }
         else{
             push (@valuesM, "0");
-            print $m."\n";
+            #print $m."\n";
         }
     }
     $tm++;
