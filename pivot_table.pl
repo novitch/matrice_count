@@ -90,6 +90,7 @@ foreach my $m (keys %ko){
         }
         else{
             push (@valuesM, "0");
+            print $m."\n";
         }
     }
     $tm++;
